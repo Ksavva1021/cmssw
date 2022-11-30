@@ -2,8 +2,11 @@
 #define DATAFORMATS_SISTRIPCLUSTER_H
 
 #include "DataFormats/SiStripDigi/interface/SiStripDigi.h"
+#include "DataFormats/SiStripCluster/interface/SiStripApproximateCluster.h"
 #include <vector>
 #include <numeric>
+
+class SiStripApproximateCluster;
 
 class SiStripCluster {
 public:
@@ -13,7 +16,7 @@ public:
   static const uint16_t stripIndexMask = 0x7FFF;   // The first strip index is in the low 15 bits of firstStrip_
   static const uint16_t mergedValueMask = 0x8000;  // The merged state is given by the high bit of firstStrip_
 
-  /** Construct from a range of digis that form a cluster and from 
+  /** Construct from a range of digis that form a cluster and from
    *  a DetID. The range is assumed to be non-empty.
    */
 
@@ -34,6 +37,8 @@ public:
       firstStrip_ |= mergedValueMask;  // if this is a candidate merged cluster
   }
 
+  explicit SiStripCluster( SiStripApproximateCluster cluster );
+
   // extend the cluster
   template <typename Iter>
   void extend(Iter begin, Iter end) {
@@ -52,7 +57,7 @@ public:
    *  the amplitude is set to zero.
    *  A strip may be missing in the middle of a cluster because of a
    *  clusterizer that accepts holes.
-   *  A strip may also be missing anywhere in the cluster, including the 
+   *  A strip may also be missing anywhere in the cluster, including the
    *  edge, to record a dead/noisy channel.
    *
    *  You can find the special meanings of values { 0, 254, 255} in section 3.4.1 of
@@ -75,7 +80,7 @@ public:
   /** total charge
    *
    */
-  int charge() const { return std::accumulate(begin(), end(), int(0)); }
+  int charge() const;
 
   /** Test (set) the merged status of the cluster
    *
@@ -91,6 +96,8 @@ private:
 
   uint16_t firstStrip_ = 0;
 
+  float barycenter_ = 0;
+  int charge_ =0;
   // ggiurgiu@fnal.gov, 01/05/12
   // Add cluster errors to be used by rechits from split clusters.
   // A rechit from a split cluster has larger errors than rechits from normal clusters.
