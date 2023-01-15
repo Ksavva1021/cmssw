@@ -14,6 +14,7 @@ class SiStripApproximateCluster {
 public:
   SiStripApproximateCluster() {}
 
+
   explicit SiStripApproximateCluster(float barycenter, uint8_t width, float avgCharge, bool isSaturated) {
     barycenter_ = barycenter;
     width_ = width;

@@ -10,6 +10,7 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
   //Looks for 3 adjacent saturated strips (ADC>=254)
 
+
   const auto& ampls = cluster.amplitudes();
   unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
   for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {

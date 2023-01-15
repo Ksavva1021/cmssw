@@ -59,4 +59,6 @@ void SiStripClusters2ApproxClusters::fillDescriptions(edm::ConfigurationDescript
   descriptions.add("SiStripClusters2ApproxClusters", desc);
 }
 
+
 DEFINE_FWK_MODULE(SiStripClusters2ApproxClusters);
+
