@@ -242,6 +242,11 @@ bool StripSubClusterShapeFilterBase::testLastHit(const TrackingRecHit *hit,
 
     INC_COUNTER(called_)
     const auto &ampls = cluster.amplitudes();
+    
+    //bool sat = cluster.isSaturated();
+    
+    //std::cout << " Saturated Flag " << sat << std::endl;
+    
 
     // pass-through of trivial case
     if (std::abs(hitPredPos) < 1.5f && hitStrips <= 2) {
