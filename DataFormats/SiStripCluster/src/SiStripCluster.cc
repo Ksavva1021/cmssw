@@ -28,7 +28,7 @@ SiStripCluster::SiStripCluster(SiStripApproximateCluster cluster) : error_x(-999
   amplitudes_.resize(cluster.width(), cluster.avgCharge()); //fill amplitudes_ with the average charge of the cluster
   firstStrip_ = cluster.barycenter() - cluster.width()/2; //initialize firstStrip_ to avoid bug
   isSaturated_ = cluster.isSaturated();
-  std::cout << "Saturated: " <<isSaturated_ << std::endl;
+  std::cout << "Saturated: " << isSaturated_ << std::endl;
 }
 
 int SiStripCluster::charge() const {
@@ -36,7 +36,7 @@ int SiStripCluster::charge() const {
   return std::accumulate(begin(), end(), int(0));
 }
 
-/bool SiStripCluster::isSaturated() const { 
+bool SiStripCluster::isSaturated() const { 
   if (barycenter_ > 0 ) return isSaturated_;
   const auto& ampls = amplitudes_;
   unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
