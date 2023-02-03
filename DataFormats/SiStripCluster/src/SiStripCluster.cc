@@ -36,28 +36,26 @@ int SiStripCluster::charge() const {
   return std::accumulate(begin(), end(), int(0));
 }
 
-//bool SiStripCluster::isSaturated() const { 
-//  if (barycenter_ > 0 ) return isSaturated_;
-//  return false;
-//}
-//  const auto& ampls = amplitudes_;
-//  unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
-//  for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {
-//    if (ampls[i] >= 254) {
-//      thisSat++;
-//    } else if (thisSat > 0) {
-//      maxSat = std::max<int>(maxSat, thisSat);
-//      thisSat = 0;
-//    }
-//  }
-//  if (thisSat > 0) {
-//    maxSat = std::max<int>(maxSat, thisSat);
-//  }
-//  if (maxSat >= 3) {
-//    return true;
-//  }
-//  return false;
-
+/bool SiStripCluster::isSaturated() const { 
+  if (barycenter_ > 0 ) return isSaturated_;
+  const auto& ampls = amplitudes_;
+  unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
+  for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {
+    if (ampls[i] >= 254) {
+      thisSat++;
+    } else if (thisSat > 0) {
+      maxSat = std::max<int>(maxSat, thisSat);
+      thisSat = 0;
+    }
+  }
+  if (thisSat > 0) {
+    maxSat = std::max<int>(maxSat, thisSat);
+  }
+  if (maxSat >= 3) {
+    return true;
+  }
+  return false;
+}
 
 float SiStripCluster::barycenter() const {
   if ( barycenter_ > 0 ) return barycenter_;
