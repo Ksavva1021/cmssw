@@ -1,8 +1,7 @@
 <lcgdict>
 
- <class name="SiStripCluster" ClassVersion="19">
-  <version ClassVersion="19" checksum="3388756327"/>
-  <version ClassVersion="10" checksum="3791198690"/>
+ <class name="SiStripCluster" ClassVersion="26">
+  <version ClassVersion="26" checksum="3388756327"/>
   <field name="error_x" transient="true"/>
  </class>
  <class name="std::vector<SiStripCluster>"/>
