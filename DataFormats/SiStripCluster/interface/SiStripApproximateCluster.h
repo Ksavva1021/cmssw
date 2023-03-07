@@ -7,6 +7,7 @@
 #include <iomanip>
 
 #include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 class SiStripCluster;
 
@@ -22,6 +23,7 @@ public:
     isSaturated_ = isSaturated;
   }
 
+  //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const BeamSpot& bs);
   explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
 
   float barycenter() const { return barycenter_; }
