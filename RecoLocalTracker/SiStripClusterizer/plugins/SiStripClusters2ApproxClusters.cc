@@ -11,6 +11,7 @@
 #include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 #include <vector>
 #include <memory>
@@ -24,17 +25,22 @@ public:
 
 private:
   edm::InputTag inputClusters;
+  edm::InputTag beamSpot; // member variable for BeamSpotTag
   edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster> > clusterToken;
+  edm::EDGetTokenT<reco::BeamSpot> beamSpotToken; // token for BeamSpot
 
   unsigned int maxNSat;
 };
 
 SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::ParameterSet& conf) {
   inputClusters = conf.getParameter<edm::InputTag>("inputClusters");
+  beamSpot = conf.getParameter<edm::InputTag>("beamSpot"); // initialising the new member variable
 
   maxNSat = conf.getParameter<unsigned int>("maxSaturatedStrips");
 
   clusterToken = consumes<edmNew::DetSetVector<SiStripCluster> >(inputClusters);
+  beamSpotToken = consumes<reco::BeamSpot>(beamSpot); // initialising beamSpot token
+
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
 }
 
@@ -42,11 +48,17 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   auto result = std::make_unique<edmNew::DetSetVector<SiStripApproximateCluster> >();
   const auto& clusterCollection = event.get(clusterToken);
 
+  edm::Handle<reco::BeamSpot> beamSpotHandle;
+  event.getByToken(beamSpotToken, beamSpotHandle); // retrive BeamSpot data
+  reco::BeamSpot const* bs = nullptr;
+  if (beamSpotHandle.isValid())
+    bs = &(*beamSpotHandle);
+
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
     for (const auto& cluster : detClusters)
-      ff.push_back(SiStripApproximateCluster(cluster, maxNSat));
+      ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
   }
 
   event.put(std::move(result));
@@ -56,6 +68,7 @@ void SiStripClusters2ApproxClusters::fillDescriptions(edm::ConfigurationDescript
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("inputClusters", edm::InputTag("siStripClusters"));
   desc.add<unsigned int>("maxSaturatedStrips", 3);
+  desc.add<edm::InputTag>("beamSpot", edm::InputTag("beamSpot")); // add BeamSpot tag
   descriptions.add("SiStripClusters2ApproxClusters", desc);
 }
 
