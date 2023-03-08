@@ -53,12 +53,13 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   reco::BeamSpot const* bs = nullptr;
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
-
+  std::cout << bs << std::endl;
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
     for (const auto& cluster : detClusters)
       ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
+      //ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
   }
 
   event.put(std::move(result));

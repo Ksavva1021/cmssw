@@ -1,16 +1,15 @@
 #include "DataFormats/SiStripCluster/interface/SiStripApproximateCluster.h"
 
-//SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat,const BeamSpot& bs) {
-SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat) {
+SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat,const reco::BeamSpot* bs) {
+//SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat) {
   barycenter_ = cluster.barycenter();
   width_ = cluster.size();
   avgCharge_ = cluster.charge()/cluster.size();
 
   isSaturated_ = false;
-
+  std::cout << "BeamSpot test: " << bs << std::endl;
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
   //Looks for 3 adjacent saturated strips (ADC>=254)
-
 
   const auto& ampls = cluster.amplitudes();
   unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
