@@ -7,7 +7,9 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
   avgCharge_ = cluster.charge()/cluster.size();
 
   isSaturated_ = false;
-  std::cout << "BeamSpot test: " << bs << std::endl;
+  if(bs){
+     std::cout << "BeamSpot test: " << bs->x0() << " " << bs->y0() << " " << bs->z0() << std::endl;
+  }
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
   //Looks for 3 adjacent saturated strips (ADC>=254)
 
