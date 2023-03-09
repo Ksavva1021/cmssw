@@ -69,7 +69,7 @@ void SiStripClusters2ApproxClusters::fillDescriptions(edm::ConfigurationDescript
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("inputClusters", edm::InputTag("siStripClusters"));
   desc.add<unsigned int>("maxSaturatedStrips", 3);
-  desc.add<edm::InputTag>("beamSpot", edm::InputTag("beamSpot")); // add BeamSpot tag
+  desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot")); // add BeamSpot tag
   descriptions.add("SiStripClusters2ApproxClusters", desc);
 }
 
