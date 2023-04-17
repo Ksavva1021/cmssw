@@ -1,5 +1,3 @@
-
-
 #include "FWCore/Framework/interface/MakerMacros.h"
 #include "FWCore/Framework/interface/Frameworkfwd.h"
 #include "FWCore/Framework/interface/stream/EDProducer.h"
@@ -12,6 +10,13 @@
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
 #include "DataFormats/Common/interface/DetSetVector.h"
 #include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "DataFormats/GeometryVector/interface/LocalPoint.h"
+#include "DataFormats/GeometryVector/interface/GlobalPoint.h"
+#include "DataFormats/TrackReco/interface/Track.h"
+#include "DataFormats/TrackReco/interface/TrackBase.h"
+#include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
+#include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "CalibFormats/SiStripObjects/interface/SiStripDetInfo.h"
 
 #include <vector>
 #include <memory>
@@ -28,6 +33,8 @@ private:
   edm::InputTag beamSpot; // member variable for BeamSpotTag
   edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster> > clusterToken;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken; // token for BeamSpot
+  edm::ESHandle<TrackerGeometry> trackerGeometryHandle; // new member variable for TrackerGeometry
+
 
   unsigned int maxNSat;
 };
@@ -44,7 +51,7 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
 }
 
-void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup const&) {
+void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup const& setup) {
   auto result = std::make_unique<edmNew::DetSetVector<SiStripApproximateCluster> >();
   const auto& clusterCollection = event.get(clusterToken);
 
@@ -53,13 +60,40 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   reco::BeamSpot const* bs = nullptr;
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
-  std::cout << bs << std::endl;
+  //std::cout << bs << std::endl;
+
+  if (!trackerGeometryHandle.isValid()) {
+    setup.get<TrackerDigiGeometryRecord>().get(trackerGeometryHandle); // retrieve TrackerGeometry
+    std::cout << "TrackerGeometry is valid" << std::endl;
+  }
+
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
-    for (const auto& cluster : detClusters)
+    for (const auto& cluster : detClusters){
+      const GeomDet* det = trackerGeometryHandle->idToDet(detClusters.id());
+      std::pair<unsigned short, double> detInfo = SiStripDetInfo().getNumberOfApvsAndStripLength(detClusters.id());
+      unsigned short nApvs = detInfo.first;
+      double stripLength = detInfo.second;
+
+      double y = cluster.barycenter() * stripLength / (nApvs * 128.0);
+      //double y = 0.;
+ 
+      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,0.));
+      const GlobalPoint& gp = det->surface().toGlobal(lp);
+
+      GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
+      const GeomDet* bsDet = trackerGeometryHandle->idToDet(DetId(DetId::Tracker, 0));
+      const LocalPoint& bsLp = bsDet->surface().toLocal(beamspot);
+      const GlobalPoint& bsGp = bsDet->surface().toGlobal(bsLp);
+      
+      GlobalVector barycenterToBs = bsGp - gp;
+
+
+      //std::cout << beamspot << std::endl; 
       ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
       //ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
+    }
   }
 
   event.put(std::move(result));
