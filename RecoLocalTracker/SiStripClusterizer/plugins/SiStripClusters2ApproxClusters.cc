@@ -37,7 +37,7 @@ private:
   edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster> > clusterToken;
   edm::InputTag beamSpot; // member variable for BeamSpotTag
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken; // token for BeamSpot
-  edm::ESHandle<TrackerGeometry> trackerGeometryHandle;
+  edm::ESGetToken<TrackerGeometry, TrackerDigiGeometryRecord> tkGeomToken_;
   edm::FileInPath fileInPath;
   SiStripDetInfo detInfo;
 
@@ -51,6 +51,8 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
 
   clusterToken = consumes<edmNew::DetSetVector<SiStripCluster> >(inputClusters);
   beamSpotToken = consumes<reco::BeamSpot>(beamSpot); // initialising beamSpot token
+
+  tkGeomToken_ = esConsumes(); 
 
   fileInPath = fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
   detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
@@ -68,9 +70,7 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
 
-  if (!trackerGeometryHandle.isValid()) {
-    setup.get<TrackerDigiGeometryRecord>().get(trackerGeometryHandle); // retrieve TrackerGeometry
-  }
+  const auto& tkGeom = &setup.getData(tkGeomToken_);
 
   unsigned short Nstrips;
   double stripLength;
@@ -79,7 +79,7 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
     for (const auto& cluster : detClusters){
-      const GeomDet* det = trackerGeometryHandle->idToDet(detClusters.id());
+      const GeomDet* det = tkGeom->idToDet(detClusters.id());
       const StripGeomDetUnit* stripDet = (const StripGeomDetUnit*)(&det);
 
       Nstrips = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).first * 128;
