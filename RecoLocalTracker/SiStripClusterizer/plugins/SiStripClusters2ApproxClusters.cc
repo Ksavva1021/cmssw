@@ -5,6 +5,7 @@
 #include "FWCore/Utilities/interface/InputTag.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
+#include "FWCore/ParameterSet/interface/FileInPath.h"
 #include "DataFormats/SiStripCluster/interface/SiStripApproximateCluster.h"
 #include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
 #include "DataFormats/Common/interface/DetSetVectorNew.h"
@@ -14,9 +15,12 @@
 #include "DataFormats/GeometryVector/interface/GlobalPoint.h"
 #include "DataFormats/TrackReco/interface/Track.h"
 #include "DataFormats/TrackReco/interface/TrackBase.h"
+#include "DataFormats/GeometryCommonDetAlgo/interface/MeasurementPoint.h"
 #include "Geometry/TrackerGeometryBuilder/interface/TrackerGeometry.h"
 #include "Geometry/Records/interface/TrackerDigiGeometryRecord.h"
+#include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripDetInfo.h"
+#include "CalibTracker/SiStripCommon/interface/SiStripDetInfoFileReader.h"
 
 #include <vector>
 #include <memory>
@@ -33,8 +37,9 @@ private:
   edm::InputTag beamSpot; // member variable for BeamSpotTag
   edm::EDGetTokenT<edmNew::DetSetVector<SiStripCluster> > clusterToken;
   edm::EDGetTokenT<reco::BeamSpot> beamSpotToken; // token for BeamSpot
-  edm::ESHandle<TrackerGeometry> trackerGeometryHandle; // new member variable for TrackerGeometry
-
+  edm::ESHandle<TrackerGeometry> trackerGeometryHandle;
+  edm::FileInPath fileInPath;
+  SiStripDetInfo detInfo;
 
   unsigned int maxNSat;
 };
@@ -48,6 +53,9 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   clusterToken = consumes<edmNew::DetSetVector<SiStripCluster> >(inputClusters);
   beamSpotToken = consumes<reco::BeamSpot>(beamSpot); // initialising beamSpot token
 
+  fileInPath = fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
+  detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
+
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
 }
 
@@ -60,37 +68,38 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   reco::BeamSpot const* bs = nullptr;
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
-  //std::cout << bs << std::endl;
 
   if (!trackerGeometryHandle.isValid()) {
     setup.get<TrackerDigiGeometryRecord>().get(trackerGeometryHandle); // retrieve TrackerGeometry
-    std::cout << "TrackerGeometry is valid" << std::endl;
   }
+
+  unsigned short Nstrips;
+  double stripLength;
 
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
     for (const auto& cluster : detClusters){
       const GeomDet* det = trackerGeometryHandle->idToDet(detClusters.id());
-      std::pair<unsigned short, double> detInfo = SiStripDetInfo().getNumberOfApvsAndStripLength(detClusters.id());
-      unsigned short nApvs = detInfo.first;
-      double stripLength = detInfo.second;
+      const StripGeomDetUnit* stripDet = (const StripGeomDetUnit*)(&det);
 
-      double y = cluster.barycenter() * stripLength / (nApvs * 128.0);
-      //double y = 0.;
+      Nstrips = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).first * 128;
+      stripLength = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).second;
+         
+      double y = cluster.barycenter() * stripLength / (Nstrips * 128.0);
  
-      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,0.));
+      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,stripDet->surface().position().z()));
       const GlobalPoint& gp = det->surface().toGlobal(lp);
 
       GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
-      const GeomDet* bsDet = trackerGeometryHandle->idToDet(DetId(DetId::Tracker, 0));
-      const LocalPoint& bsLp = bsDet->surface().toLocal(beamspot);
-      const GlobalPoint& bsGp = bsDet->surface().toGlobal(bsLp);
-      
-      GlobalVector barycenterToBs = bsGp - gp;
 
+      //const GeomDet* bsDet = trackerGeometryHandle->idToDet(DetId(DetId::Tracker, 0));
+      //const LocalPoint& bsLp = bsDet->surface().toLocal(beamspot);
+      //const GlobalPoint& bsGp = bsDet->surface().toGlobal(bsLp);
+       
+      GlobalVector barycenterToBs = beamspot - gp;
 
-      //std::cout << beamspot << std::endl; 
+      std::cout << barycenterToBs << std::endl; 
       ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
       //ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
     }
