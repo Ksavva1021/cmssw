@@ -272,7 +272,7 @@ bool StripSubClusterShapeFilterBase::testLastHit(const TrackingRecHit *hit,
     //  return true;
     //}
     if (sat){
-        std::cout << "Saturated Pass" << cluster.barycenter() << std::endl;
+        //std::cout << "Saturated Pass" << cluster.barycenter() << std::endl;
 	INC_COUNTER(saturated_)
 	return true;
     }
