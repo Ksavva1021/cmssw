@@ -46,7 +46,20 @@ int SiStripCluster::charge() const {
 float SiStripCluster::barycenter() const {
   if (barycenter_ > 0)
     return barycenter_;
+  int sumx = 0;
+  int suma = 0;
+  auto asize = size();
+  for (auto i = 0U; i < asize; ++i) {
+    sumx += i * amplitudes_[i];
+    suma += amplitudes_[i];
+  }
 
+  // strip centers are offcet by half pitch w.r.t. strip numbers,
+  // so one has to add 0.5 to get the correct barycenter position.
+  // Need to mask off the high bit of firstStrip_, which contains the merged status.
+  return float((firstStrip_ & stripIndexMask)) + float(sumx) / float(suma) + 0.5f;
+}
+  
 bool SiStripCluster::isSaturated() const { 
   if (barycenter_ > 0 ) return isSaturated_;
   const auto& ampls = amplitudes_;
@@ -68,16 +81,3 @@ bool SiStripCluster::isSaturated() const {
   return false;
 }
 
-  int sumx = 0;
-  int suma = 0;
-  auto asize = size();
-  for (auto i = 0U; i < asize; ++i) {
-    sumx += i * amplitudes_[i];
-    suma += amplitudes_[i];
-  }
-
-  // strip centers are offcet by half pitch w.r.t. strip numbers,
-  // so one has to add 0.5 to get the correct barycenter position.
-  // Need to mask off the high bit of firstStrip_, which contains the merged status.
-  return float((firstStrip_ & stripIndexMask)) + float(sumx) / float(suma) + 0.5f;
-}
