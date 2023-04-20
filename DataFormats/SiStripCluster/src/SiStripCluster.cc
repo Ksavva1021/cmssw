@@ -47,6 +47,27 @@ float SiStripCluster::barycenter() const {
   if (barycenter_ > 0)
     return barycenter_;
 
+bool SiStripCluster::isSaturated() const { 
+  if (barycenter_ > 0 ) return isSaturated_;
+  const auto& ampls = amplitudes_;
+  unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
+  for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {
+    if (ampls[i] >= 254) {
+      thisSat++;
+    } else if (thisSat > 0) {
+      maxSat = std::max<int>(maxSat, thisSat);
+      thisSat = 0;
+    }
+  }
+  if (thisSat > 0) {
+    maxSat = std::max<int>(maxSat, thisSat);
+  }
+  if (maxSat >= 3) {
+    return true;
+  }
+  return false;
+}
+
   int sumx = 0;
   int suma = 0;
   auto asize = size();

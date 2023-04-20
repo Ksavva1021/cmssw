@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 
+
 class SiStripApprox2ApproxClusters : public edm::stream::EDProducer<> {
 public:
   explicit SiStripApprox2ApproxClusters(const edm::ParameterSet& conf);
@@ -85,7 +86,6 @@ void SiStripApprox2ApproxClusters::produce(edm::Event& event, edm::EventSetup co
           avgCharge = std::round(avgCharge * 10) / 10;
           break;
       }
-
       ff.push_back(SiStripApproximateCluster(barycenter, width, avgCharge, isSaturated));
     }
   }

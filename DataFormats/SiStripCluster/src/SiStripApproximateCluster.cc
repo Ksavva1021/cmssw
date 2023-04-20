@@ -3,10 +3,11 @@
 #include <algorithm>
 #include <cmath>
 
-SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat) {
+SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat,const reco::BeamSpot* bs) {
+//SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat) {
   barycenter_ = std::round(cluster.barycenter() * 10);
   width_ = cluster.size();
-  avgCharge_ = cluster.charge() / cluster.size();
+  avgCharge_ = cluster.charge()/cluster.size();
   isSaturated_ = false;
 
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
