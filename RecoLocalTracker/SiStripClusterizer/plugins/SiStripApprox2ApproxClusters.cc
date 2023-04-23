@@ -15,6 +15,7 @@
 #include <vector>
 #include <memory>
 
+
 class SiStripApprox2ApproxClusters : public edm::stream::EDProducer<> {
 public:
   explicit SiStripApprox2ApproxClusters(const edm::ParameterSet& conf);

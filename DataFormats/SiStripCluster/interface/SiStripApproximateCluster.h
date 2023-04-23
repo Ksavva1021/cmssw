@@ -2,6 +2,13 @@
 #define DataFormats_SiStripCluster_SiStripApproximateCluster_h
 
 #include "FWCore/Utilities/interface/typedefs.h"
+#include <numeric>
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+
+#include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
 
 class SiStripCluster;
 class SiStripApproximateCluster {
@@ -18,8 +25,9 @@ public:
     isSaturated_ = isSaturated;
   }
 
-  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
-
+  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const reco::BeamSpot* bs);
+  //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
+  
   cms_uint16_t barycenter() const { return barycenter_; }
   cms_uint8_t width() const { return width_; }
   cms_uint8_t avgCharge() const { return avgCharge_; }

@@ -9,6 +9,8 @@
 
 class SiStripApproximateCluster;
 
+class SiStripApproximateCluster;
+
 class SiStripCluster {
 public:
   typedef std::vector<SiStripDigi>::const_iterator SiStripDigiIter;
@@ -17,7 +19,7 @@ public:
   static const uint16_t stripIndexMask = 0x7FFF;   // The first strip index is in the low 15 bits of firstStrip_
   static const uint16_t mergedValueMask = 0x8000;  // The merged state is given by the high bit of firstStrip_
 
-  /** Construct from a range of digis that form a cluster and from 
+  /** Construct from a range of digis that form a cluster and from
    *  a DetID. The range is assumed to be non-empty.
    */
 
@@ -51,7 +53,7 @@ public:
    *  the amplitude is set to zero.
    *  A strip may be missing in the middle of a cluster because of a
    *  clusterizer that accepts holes.
-   *  A strip may also be missing anywhere in the cluster, including the 
+   *  A strip may also be missing anywhere in the cluster, including the
    *  edge, to record a dead/noisy channel.
    *
    *  You can find the special meanings of values { 0, 254, 255} in section 3.4.1 of
@@ -82,6 +84,8 @@ public:
    */
   int charge() const;
 
+  bool isSaturated() const;
+
   /** Test (set) the merged status of the cluster
    *
    */
@@ -99,6 +103,7 @@ private:
   //these are used if amplitude information is not available (using approximate cluster constructor)
   float barycenter_ = 0;
   int charge_ = 0;
+  bool isSaturated_ = false; 
 
   // ggiurgiu@fnal.gov, 01/05/12
   // Add cluster errors to be used by rechits from split clusters.

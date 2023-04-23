@@ -149,7 +149,7 @@ StripSubClusterShapeFilterBase::StripSubClusterShapeFilterBase(const edm::Parame
       seedCutSN_(iCfg.getParameter<double>("seedCutSN")),
       subclusterCutMIPs_(iCfg.getParameter<double>("subclusterCutMIPs")),
       subclusterCutSN_(iCfg.getParameter<double>("subclusterCutSN"))
-#ifdef StripSubClusterShapeFilterBase_COUNTERS
+//#ifdef StripSubClusterShapeFilterBase_COUNTERS
       ,
       called_(0),
       saturated_(0),
@@ -158,7 +158,7 @@ StripSubClusterShapeFilterBase::StripSubClusterShapeFilterBase(const edm::Parame
       failTooLarge_(0),
       passSC_(0),
       failTooNarrow_(0)
-#endif
+//#endif
 {
   const edm::ParameterSet &iLM = iCfg.getParameter<edm::ParameterSet>("layerMask");
   if (not iLM.empty()) {
@@ -259,6 +259,9 @@ bool StripSubClusterShapeFilterBase::testLastHit(const TrackingRecHit *hit,
 
     INC_COUNTER(called_)
     const auto &ampls = cluster.amplitudes();
+    
+    bool sat = cluster.isSaturated();
+    
 
     // pass-through of trivial case
     if (std::abs(hitPredPos) < 1.5f && hitStrips <= 2) {
@@ -267,22 +270,30 @@ bool StripSubClusterShapeFilterBase::testLastHit(const TrackingRecHit *hit,
 
     // compute number of consecutive saturated strips
     // (i.e. with adc count >= 254, see SiStripCluster class for documentation)
-    unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
-    for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {
-      if (ampls[i] >= 254) {
-        thisSat++;
-      } else if (thisSat > 0) {
-        maxSat = std::max<int>(maxSat, thisSat);
-        thisSat = 0;
-      }
+
+    // -------------------------------- Disabled this to check new saturated implementation ----------------------------
+    //unsigned int thisSat = (ampls[0] >= 254), maxSat = thisSat;
+    //for (unsigned int i = 1, n = ampls.size(); i < n; ++i) {
+    //  if (ampls[i] >= 254) {
+    //    thisSat++;
+    //  } else if (thisSat > 0) {
+    //    maxSat = std::max<int>(maxSat, thisSat);
+    //    thisSat = 0;
+    //  }
+    //}
+    //if (thisSat > 0) {
+    //  maxSat = std::max<int>(maxSat, thisSat);
+    //}
+    //if (maxSat >= maxNSat_) {
+    //  INC_COUNTER(saturated_)
+    //  return true;
+    //}
+    if (sat){
+        //std::cout << "Saturated Pass" << cluster.barycenter() << std::endl;
+	INC_COUNTER(saturated_)
+	return true;
     }
-    if (thisSat > 0) {
-      maxSat = std::max<int>(maxSat, thisSat);
-    }
-    if (maxSat >= maxNSat_) {
-      INC_COUNTER(saturated_)
-      return true;
-    }
+    // ----------------------------------------------------------------------------------------------------------------
 
     // trimming
     INC_COUNTER(test_)

@@ -6,5 +6,7 @@
   <use name="HeterogeneousCore/CUDAUtilities"/>
   <use name="CUDADataFormats/SiStripCluster"/>
   <use name="cuda"/>
+  <use name="CalibFormats/SiStripObjects"/>
+  <use name="CalibTracker/SiStripCommon"/>
   <flags EDM_PLUGIN="1"/>
 </library>
