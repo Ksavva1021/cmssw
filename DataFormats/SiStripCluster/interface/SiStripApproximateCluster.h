@@ -25,8 +25,8 @@ public:
     isSaturated_ = isSaturated;
   }
 
-  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const reco::BeamSpot* bs);
-  //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
+  //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const reco::BeamSpot* bs);
+  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
   
   cms_uint16_t barycenter() const { return barycenter_; }
   cms_uint8_t width() const { return width_; }
