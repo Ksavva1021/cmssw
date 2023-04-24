@@ -21,6 +21,8 @@
 #include "Geometry/TrackerGeometryBuilder/interface/StripGeomDetUnit.h"
 #include "CalibFormats/SiStripObjects/interface/SiStripDetInfo.h"
 #include "CalibTracker/SiStripCommon/interface/SiStripDetInfoFileReader.h"
+#include "RecoTracker/PixelLowPtUtilities/interface/ClusterShapeHitFilter.h"
+#include "RecoTracker/Record/interface/CkfComponentsRecord.h"
 
 #include <vector>
 #include <memory>
@@ -41,6 +43,8 @@ private:
   edm::FileInPath fileInPath;
   SiStripDetInfo detInfo;
 
+  edm::ESGetToken<ClusterShapeHitFilter, CkfComponentsRecord> csfToken_;
+
   unsigned int maxNSat;
 };
 
@@ -55,8 +59,9 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   beamSpotToken = consumes<reco::BeamSpot>(beamSpot); // initialising beamSpot token
   
   tkGeomToken_ = esConsumes(); 
+  csfToken_ = esConsumes<ClusterShapeHitFilter, CkfComponentsRecord>(edm::ESInputTag("", "ClusterShapeHitFilter"));
 
-  fileInPath = fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
+  fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
   detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
 
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
@@ -65,6 +70,9 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
 void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup const& setup) {
   auto result = std::make_unique<edmNew::DetSetVector<SiStripApproximateCluster> >();
   const auto& clusterCollection = event.get(clusterToken);
+
+  edm::ESHandle<ClusterShapeHitFilter> theFilter;
+  theFilter= setup.getHandle(csfToken_);
 
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   event.getByToken(beamSpotToken, beamSpotHandle); // retrive BeamSpot data
@@ -76,33 +84,31 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
 
   unsigned short Nstrips;
   double stripLength;
+  //float hitPredPos;
+  //int hitStrips;
 
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
 
     for (const auto& cluster : detClusters){
       const GeomDet* det = tkGeom->idToDet(detClusters.id());
-      const StripGeomDetUnit* stripDet = (const StripGeomDetUnit*)(&det);
-
-      Nstrips = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).first * 128;
-      stripLength = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).second;
-         
-      double y = cluster.barycenter() * stripLength / (Nstrips * 128.0);
- 
-      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,stripDet->surface().position().z()));
-      const GlobalPoint& gp = det->surface().toGlobal(lp);
 
       GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
+      const StripGeomDetUnit* stripDet = (const StripGeomDetUnit*)(&det);
+      Nstrips = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).first * 128;
+      stripLength = detInfo.getNumberOfApvsAndStripLength(detClusters.id()).second;
+      double y = cluster.barycenter() * stripLength / (Nstrips * 128.0);
+      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,stripDet->surface().position().z()));
+      const GlobalPoint& gpos = det->surface().toGlobal(lp);
 
-      //const GeomDet* bsDet = trackerGeometryHandle->idToDet(DetId(DetId::Tracker, 0));
-      //const LocalPoint& bsLp = bsDet->surface().toLocal(beamspot);
-      //const GlobalPoint& bsGp = bsDet->surface().toGlobal(bsLp);
-       
-      GlobalVector barycenterToBs = beamspot - gp;
+      GlobalVector gdir = beamspot - gpos;
+      LocalVector ldir = det->toLocal(gdir);
+      LocalPoint lpos = det->toLocal(gpos);
+      std::cout << gdir << ldir << lpos << std::endl;
+      //bool usable = theFilter->getSizes(detClusters.id(), cluster, lpos, ldir, hitStrips, hitPredPos);
 
-      std::cout << barycenterToBs << std::endl; 
-      ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
-      //ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
+      //ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
+      ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
     }
   }
 
@@ -113,8 +119,8 @@ void SiStripClusters2ApproxClusters::fillDescriptions(edm::ConfigurationDescript
   edm::ParameterSetDescription desc;
   desc.add<edm::InputTag>("inputClusters", edm::InputTag("siStripClusters"));
   desc.add<unsigned int>("maxSaturatedStrips", 3);
-  descriptions.add("SiStripClusters2ApproxClusters", desc);
   desc.add<edm::InputTag>("beamSpot", edm::InputTag("offlineBeamSpot")); // add BeamSpot tag
+  descriptions.add("SiStripClusters2ApproxClusters", desc);
 }
 
 DEFINE_FWK_MODULE(SiStripClusters2ApproxClusters);
