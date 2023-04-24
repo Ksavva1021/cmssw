@@ -77,7 +77,7 @@ process.DQMoutput = cms.OutputModule("DQMRootOutputModule",
 
 # Other statements
 from Configuration.AlCa.GlobalTag import GlobalTag
-process.GlobalTag = GlobalTag(process.GlobalTag, '120X_upgrade2018_realistic_v1', '')
+process.GlobalTag = GlobalTag(process.GlobalTag, '131X_upgrade2018_realistic_v2', '')
 
 
 #this module gets a collection of standard strip clusters (list of amplitudes) as input
