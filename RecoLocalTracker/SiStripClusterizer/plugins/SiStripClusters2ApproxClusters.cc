@@ -3,6 +3,7 @@
 #include "FWCore/Framework/interface/stream/EDProducer.h"
 #include "FWCore/ParameterSet/interface/ParameterSet.h"
 #include "FWCore/Utilities/interface/InputTag.h"
+#include "FWCore/Utilities/interface/ESInputTag.h"
 #include "FWCore/ParameterSet/interface/ConfigurationDescriptions.h"
 #include "FWCore/ParameterSet/interface/ParameterSetDescription.h"
 #include "FWCore/ParameterSet/interface/FileInPath.h"
@@ -59,7 +60,7 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   beamSpotToken = consumes<reco::BeamSpot>(beamSpot); // initialising beamSpot token
   
   tkGeomToken_ = esConsumes(); 
-  csfToken_ = esConsumes<ClusterShapeHitFilter, CkfComponentsRecord>(edm::ESInputTag("", "ClusterShapeHitFilter"));
+  csfToken_ = esConsumes(edm::ESInputTag("", "ClusterShapeHitFilter"));
 
   fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
   detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
@@ -71,15 +72,13 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   auto result = std::make_unique<edmNew::DetSetVector<SiStripApproximateCluster> >();
   const auto& clusterCollection = event.get(clusterToken);
 
-  edm::ESHandle<ClusterShapeHitFilter> theFilter;
-  theFilter= setup.getHandle(csfToken_);
-
   edm::Handle<reco::BeamSpot> beamSpotHandle;
   event.getByToken(beamSpotToken, beamSpotHandle); // retrive BeamSpot data
   reco::BeamSpot const* bs = nullptr;
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
 
+  //const auto& theFilter = &setup.getData(csfToken_);
   const auto& tkGeom = &setup.getData(tkGeomToken_);
 
   unsigned short Nstrips;
@@ -100,12 +99,15 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
       double y = cluster.barycenter() * stripLength / (Nstrips * 128.0);
       const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),y,stripDet->surface().position().z()));
       const GlobalPoint& gpos = det->surface().toGlobal(lp);
+      std::cout << gpos << std::endl;
 
-      GlobalVector gdir = beamspot - gpos;
-      LocalVector ldir = det->toLocal(gdir);
-      LocalPoint lpos = det->toLocal(gpos);
-      std::cout << gdir << ldir << lpos << std::endl;
+      //GlobalVector gdir = beamspot - gpos;
+      //LocalVector ldir = det->toLocal(gdir);
+      //LocalPoint lpos = det->toLocal(gpos);
+      //std::cout << gdir << ldir << lpos << std::endl;
+
       //bool usable = theFilter->getSizes(detClusters.id(), cluster, lpos, ldir, hitStrips, hitPredPos);
+      //std::cout << usable << std::endl;
 
       //ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
       ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
