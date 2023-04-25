@@ -3,7 +3,6 @@
   <use name="RecoLocalTracker/SiStripClusterizer"/>
   <use name="RecoLocalTracker/SiStripZeroSuppression"/>
   <use name="RecoTracker/PixelLowPtUtilities"/>
-  <use name="RecoTracker/Record"/>
   <use name="HeterogeneousCore/CUDACore"/>
   <use name="HeterogeneousCore/CUDAUtilities"/>
   <use name="CUDADataFormats/SiStripCluster"/>
@@ -11,4 +10,5 @@
   <use name="CalibFormats/SiStripObjects"/>
   <use name="CalibTracker/SiStripCommon"/>
   <flags EDM_PLUGIN="1"/>
+  <flags CXXFLAGS="-g"/>
 </library>
