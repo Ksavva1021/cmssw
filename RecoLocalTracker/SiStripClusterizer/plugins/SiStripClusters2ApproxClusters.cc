@@ -46,7 +46,7 @@ private:
   edm::FileInPath fileInPath;
   SiStripDetInfo detInfo;
 
-  //edm::ESGetToken<ClusterShapeHitFilter, CkfComponentsRecord> csfToken_;
+  edm::ESGetToken<ClusterShapeHitFilter, CkfComponentsRecord> csfToken_;
 
   unsigned int maxNSat;
 };
@@ -63,7 +63,7 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   fileInPath = edm::FileInPath(SiStripDetInfoFileReader::kDefaultFile);
   detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
 
-  //csfToken_ = esConsumes(edm::ESInputTag("", "ClusterShapeHitFilter"));
+  csfToken_ = esConsumes(edm::ESInputTag("", "ClusterShapeHitFilter"));
 
 
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
@@ -79,42 +79,40 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   if (beamSpotHandle.isValid())
     bs = &(*beamSpotHandle);
 
-  //const auto& theFilter = &setup.getData(csfToken_);
   const auto& tkGeom = &iSetup.getData(tkGeomToken_);
-
-  //float hitPredPos;
-  //int hitStrips;
+  const auto& theFilter = &iSetup.getData(csfToken_);
+  std::cout << theFilter << std::endl;
 
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
     unsigned int detId = detClusters.id();
 
     const GeomDet* det = tkGeom->idToDet(detId);
-    unsigned short nStrips;
+    //unsigned short nStrips;
     double stripLength;
-    nStrips = detInfo.getNumberOfApvsAndStripLength(detId).first * 128;
+    //nStrips = detInfo.getNumberOfApvsAndStripLength(detId).first * 128;
     stripLength = detInfo.getNumberOfApvsAndStripLength(detId).second;
+    double barycenter_ypos;
+    barycenter_ypos  = 0.5 * stripLength;
 
-    const StripGeomDetUnit* stripDet = (const StripGeomDetUnit*)(&det);
-
+    const StripGeomDetUnit* stripDet = dynamic_cast<const StripGeomDetUnit*>(det);
+   
     for (const auto& cluster : detClusters){
-      double barycenter_ypos = cluster.barycenter() * stripLength / (nStrips * 128.0);
 
-      LocalPoint lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),barycenter_ypos,stripDet->surface().position().z()));
-      std::cout << lp << bs->position().x() << std::endl;
-      //const GlobalPoint& gpos = det->surface().toGlobal(lp);
+      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),barycenter_ypos,stripDet->surface().position().z()));
+      const GlobalPoint& gpos = det->surface().toGlobal(lp);
 
-      //GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
+      GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
 
-      //GlobalVector gdir = beamspot - gpos;
+      const GlobalVector& gdir = beamspot - gpos;
 
-      //std::cout << gdir << std::endl;
-      //LocalVector ldir = det->toLocal(gdir);
-      //LocalPoint lpos = det->toLocal(gpos);
-      //std::cout << ldir << lpos;
-      //bool usable = theFilter->getSizes(detClusters.id(), cluster, lpos, ldir, hitStrips, hitPredPos);
-      //std::cout << usable << std::endl;
+      const LocalVector& ldir = det->toLocal(gdir);
+      const LocalPoint& lpos = det->toLocal(gpos);
 
+      float hitPredPos;
+      int hitStrips;
+      bool usable = theFilter->getSizes(detId, cluster, lpos, ldir, hitStrips, hitPredPos);
+      std::cout << hitPredPos << std::endl;
       //ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
       ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
     }
