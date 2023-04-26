@@ -61,6 +61,8 @@ void SiStripApprox2ApproxClusters::produce(edm::Event& event, edm::EventSetup co
       uint8_t width = cluster.width();
       float avgCharge = cluster.avgCharge();
       bool isSaturated = cluster.isSaturated();
+      bool trimFilter = cluster.trimFilter();
+      bool peakFilter = cluster.peakFilter();
 
       switch (approxVersion) {
         case 0:  //ORIGINAL
@@ -87,7 +89,7 @@ void SiStripApprox2ApproxClusters::produce(edm::Event& event, edm::EventSetup co
           break;
       }
 
-      ff.push_back(SiStripApproximateCluster(barycenter, width, avgCharge, isSaturated));
+      ff.push_back(SiStripApproximateCluster(barycenter, width, avgCharge, isSaturated, trimFilter, peakFilter));
     }
   }
 
