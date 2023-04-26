@@ -24,6 +24,8 @@
 #include "CalibTracker/SiStripCommon/interface/SiStripDetInfoFileReader.h"
 #include "RecoTracker/PixelLowPtUtilities/interface/ClusterShapeHitFilter.h"
 #include "RecoTracker/Record/interface/CkfComponentsRecord.h"
+#include "CondFormats/SiStripObjects/interface/SiStripNoises.h"
+#include "CondFormats/DataRecord/interface/SiStripNoisesRcd.h"
 
 #include <vector>
 #include <memory>
@@ -47,6 +49,8 @@ private:
   SiStripDetInfo detInfo;
 
   edm::ESGetToken<ClusterShapeHitFilter, CkfComponentsRecord> csfToken_;
+  edm::ESGetToken<SiStripNoises, SiStripNoisesRcd> stripNoiseToken_;
+  edm::ESHandle<SiStripNoises> theNoise;
 
   unsigned int maxNSat;
 };
@@ -64,7 +68,7 @@ SiStripClusters2ApproxClusters::SiStripClusters2ApproxClusters(const edm::Parame
   detInfo = SiStripDetInfoFileReader::read(fileInPath.fullPath());
 
   csfToken_ = esConsumes(edm::ESInputTag("", "ClusterShapeHitFilter"));
-
+  stripNoiseToken_ = esConsumes();
 
   produces<edmNew::DetSetVector<SiStripApproximateCluster> >();
 }
@@ -81,7 +85,9 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
 
   const auto& tkGeom = &iSetup.getData(tkGeomToken_);
   const auto& theFilter = &iSetup.getData(csfToken_);
-  std::cout << theFilter << std::endl;
+  const auto& theNoise = &iSetup.getData(stripNoiseToken_);
+  
+  float MeVperADCStrip = 9.5665E-4;
 
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
@@ -96,6 +102,8 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
     barycenter_ypos  = 0.5 * stripLength;
 
     const StripGeomDetUnit* stripDet = dynamic_cast<const StripGeomDetUnit*>(det);
+    float mip = 3.9 / (MeVperADCStrip / stripDet->surface().bounds().thickness());
+    
    
     for (const auto& cluster : detClusters){
 
@@ -108,13 +116,13 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
 
       const LocalVector& ldir = det->toLocal(gdir);
       const LocalPoint& lpos = det->toLocal(gpos);
+      
+      float mipnorm = mip / std::abs(ldir.z()); 
 
-      float hitPredPos;
       int hitStrips;
+      float hitPredPos;
       bool usable = theFilter->getSizes(detId, cluster, lpos, ldir, hitStrips, hitPredPos);
-      std::cout << hitPredPos << std::endl;
-      //ff.push_back(SiStripApproximateCluster(cluster, maxNSat, bs));
-      ff.push_back(SiStripApproximateCluster(cluster,maxNSat));
+      ff.push_back(SiStripApproximateCluster(cluster,maxNSat,detId,hitPredPos,mipnorm, theNoise));
     }
   }
 
