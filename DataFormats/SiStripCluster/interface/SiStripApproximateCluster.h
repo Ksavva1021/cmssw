@@ -34,7 +34,7 @@ public:
   }
 
   //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const reco::BeamSpot* bs);
-  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, unsigned int detId, float hitPredPos, float mipnorm,const SiStripNoises* theNoise);
+  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, float hitPredPos, bool peakFilter);
   
   cms_uint16_t barycenter() const { return barycenter_; }
   cms_uint8_t width() const { return width_; }
