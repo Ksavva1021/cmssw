@@ -26,6 +26,10 @@ SiStripCluster::SiStripCluster(const SiStripApproximateCluster cluster, const ui
   barycenter_ = cluster.barycenter() / 10.0;
   charge_ = cluster.width() * cluster.avgCharge();
   amplitudes_.resize(cluster.width(), cluster.avgCharge());
+  isSaturated_ = cluster.isSaturated();
+  trimFilter_ = cluster.trimFilter();
+  peakFilter_ = cluster.peakFilter();
+
 
   float halfwidth_ = 0.5f * float(cluster.width());
 
@@ -60,3 +64,21 @@ float SiStripCluster::barycenter() const {
   // Need to mask off the high bit of firstStrip_, which contains the merged status.
   return float((firstStrip_ & stripIndexMask)) + float(sumx) / float(suma) + 0.5f;
 }
+
+bool SiStripCluster::isSaturated() const {
+  if (barycenter_ > 0)
+    return isSaturated_;
+  return false;
+}
+bool SiStripCluster::trimFilter() const {
+  if (barycenter_ > 0)
+    return trimFilter_;
+  return false;
+}
+bool SiStripCluster::peakFilter() const {
+  if (barycenter_ > 0)
+    return peakFilter_;
+  return false;
+}
+
+

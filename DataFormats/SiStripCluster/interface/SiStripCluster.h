@@ -82,6 +82,10 @@ public:
    */
   int charge() const;
 
+  bool isSaturated() const;
+  bool trimFilter() const;
+  bool peakFilter() const;
+
   /** Test (set) the merged status of the cluster
    *
    */
@@ -99,6 +103,9 @@ private:
   //these are used if amplitude information is not available (using approximate cluster constructor)
   float barycenter_ = 0;
   int charge_ = 0;
+  bool isSaturated_ = false;
+  bool trimFilter_ = false;
+  bool peakFilter_ = false;
 
   // ggiurgiu@fnal.gov, 01/05/12
   // Add cluster errors to be used by rechits from split clusters.
