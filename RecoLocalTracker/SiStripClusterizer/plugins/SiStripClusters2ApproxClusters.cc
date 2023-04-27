@@ -26,6 +26,8 @@
 #include "RecoTracker/Record/interface/CkfComponentsRecord.h"
 #include "CondFormats/SiStripObjects/interface/SiStripNoises.h"
 #include "CondFormats/DataRecord/interface/SiStripNoisesRcd.h"
+#include "RecoTracker/PixelLowPtUtilities/interface/SlidingPeakFinder.h"
+
 
 #include <vector>
 #include <memory>
@@ -51,7 +53,7 @@ private:
   edm::ESGetToken<ClusterShapeHitFilter, CkfComponentsRecord> csfToken_;
   edm::ESGetToken<SiStripNoises, SiStripNoisesRcd> stripNoiseToken_;
   edm::ESHandle<SiStripNoises> theNoise;
-
+  
   unsigned int maxNSat;
 };
 
@@ -88,12 +90,18 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
   const auto& theNoise = &iSetup.getData(stripNoiseToken_);
   
   float MeVperADCStrip = 9.5665E-4;
+  double subclusterWindow_ = .7;
+  double seedCutMIPs_ = .35;
+  double seedCutSN_ = 7.;
+  double subclusterCutMIPs_ = .45;
+  double subclusterCutSN_ = 12.;
 
   for (const auto& detClusters : clusterCollection) {
     edmNew::DetSetVector<SiStripApproximateCluster>::FastFiller ff{*result, detClusters.id()};
     unsigned int detId = detClusters.id();
 
     const GeomDet* det = tkGeom->idToDet(detId);
+
     //unsigned short nStrips;
     double stripLength;
     //nStrips = detInfo.getNumberOfApvsAndStripLength(detId).first * 128;
@@ -122,7 +130,17 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
       int hitStrips;
       float hitPredPos;
       bool usable = theFilter->getSizes(detId, cluster, lpos, ldir, hitStrips, hitPredPos);
-      ff.push_back(SiStripApproximateCluster(cluster,maxNSat,detId,hitPredPos,mipnorm, theNoise));
+      bool peakFilter = false;
+
+      SlidingPeakFinder pf(std::max<int>(2, std::ceil(std::abs(hitPredPos) + subclusterWindow_))); 
+      PeakFinderTest test(mipnorm,detId,cluster.firstStrip(),theNoise,seedCutMIPs_,seedCutSN_,subclusterCutMIPs_,subclusterCutSN_);
+      if (pf.apply(cluster.amplitudes(), test)) {
+        peakFilter = true;
+      } else {
+        peakFilter = false;
+      }
+
+      ff.push_back(SiStripApproximateCluster(cluster,maxNSat,hitPredPos,peakFilter));
     }
   }
 
