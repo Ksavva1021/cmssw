@@ -72,9 +72,9 @@ protected:
   // layers in which to apply the filter
   std::array<std::array<uint8_t, 10>, 7> layerMask_;
 
-//#ifdef StripSubClusterShapeFilterBase_COUNTERS
+#ifdef StripSubClusterShapeFilterBase_COUNTERS
   mutable uint64_t called_, saturated_, test_, passTrim_, failTooLarge_, passSC_, failTooNarrow_;
-//#endif
+#endif
 
   edm::ESHandle<TrackerGeometry> theTracker;
   edm::ESHandle<ClusterShapeHitFilter> theFilter;
