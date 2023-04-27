@@ -6,13 +6,13 @@
 #include <cmath>
 
 //SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat,const reco::BeamSpot* bs) {
-SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, unsigned int detId, float hitPredPos, float mipnorm, const SiStripNoises* theNoise) {
+SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, float hitPredPos, bool peakFilter) {
   barycenter_ = std::round(cluster.barycenter() * 10);
   width_ = cluster.size();
   avgCharge_ = cluster.charge() / cluster.size();
   isSaturated_ = false;
   trimFilter_ = false;
-  peakFilter_ = false;
+  peakFilter_ = peakFilter;
 
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
   //Looks for 3 adjacent saturated strips (ADC>=254)
@@ -39,11 +39,6 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
   double trimMaxFracNeigh_ = .25;
   double maxTrimmedSizeDiffNeg_ = .7;
   double maxTrimmedSizeDiffPos_ = 1.;
-  double subclusterWindow_ = .7;
-  double seedCutMIPs_ = .35;
-  double seedCutSN_ = 7.;
-  double subclusterCutMIPs_ = .45;
-  double subclusterCutSN_ = 12.;
 
   unsigned int hitStripsTrim = ampls.size();
   int sum = std::accumulate(ampls.begin(), ampls.end(), 0);
@@ -64,16 +59,4 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
     trimFilter_ = true;
   }
   
-  //peakFinder
-  SlidingPeakFinder pf(std::max<int>(2, std::ceil(std::abs(hitPredPos) + subclusterWindow_))); 
-  //auto range = theNoise->getRange(detId);
-  //std::cout << "[" << *range.first << ", " << *range.second << "]" << std::endl;
-  std::cout << theNoise->getRange(detId);
-
-  //PeakFinderTest test(mipnorm,detId,cluster.firstStrip(),theNoise,seedCutMIPs_,seedCutSN_,subclusterCutMIPs_,subclusterCutSN_);
-  //if (pf.apply(cluster.amplitudes(), test)) {
-  //  peakFilter_ = true;
-  //} else {
-  //  peakFilter_ = false;
-  //}
 }
