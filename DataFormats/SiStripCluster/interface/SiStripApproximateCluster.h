@@ -2,8 +2,19 @@
 #define DataFormats_SiStripCluster_SiStripApproximateCluster_h
 
 #include "FWCore/Utilities/interface/typedefs.h"
+#include <numeric>
+#include <cmath>
+#include <iostream>
+#include <iomanip>
+
+#include "DataFormats/SiStripCluster/interface/SiStripCluster.h"
+#include "CondFormats/SiStripObjects/interface/SiStripNoises.h"
+#include "DataFormats/BeamSpot/interface/BeamSpot.h"
+#include "RecoTracker/PixelLowPtUtilities/interface/SlidingPeakFinder.h"
 
 class SiStripCluster;
+class SiStripNoises;
+class SlidingPeakFinder; 
 class SiStripApproximateCluster {
 public:
   SiStripApproximateCluster() {}
@@ -11,24 +22,33 @@ public:
   explicit SiStripApproximateCluster(cms_uint16_t barycenter,
                                      cms_uint8_t width,
                                      cms_uint8_t avgCharge,
-                                     bool isSaturated) {
+                                     bool isSaturated,
+                                     bool trimFilter,
+                                     bool peakFilter) {
     barycenter_ = barycenter;
     width_ = width;
     avgCharge_ = avgCharge;
     isSaturated_ = isSaturated;
+    trimFilter_ = trimFilter;
+    peakFilter_ = peakFilter;
   }
 
-  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat);
-
+  //explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, const reco::BeamSpot* bs);
+  explicit SiStripApproximateCluster(const SiStripCluster& cluster, unsigned int maxNSat, float hitPredPos, bool peakFilter);
+  
   cms_uint16_t barycenter() const { return barycenter_; }
   cms_uint8_t width() const { return width_; }
   cms_uint8_t avgCharge() const { return avgCharge_; }
   bool isSaturated() const { return isSaturated_; }
+  bool trimFilter() const { return trimFilter_; }
+  bool peakFilter() const { return peakFilter_; }
 
 private:
   cms_uint16_t barycenter_ = 0;
   cms_uint8_t width_ = 0;
   cms_uint8_t avgCharge_ = 0;
   bool isSaturated_ = false;
+  bool trimFilter_ = false;
+  bool peakFilter_ = false;
 };
 #endif  // DataFormats_SiStripCluster_SiStripApproximateCluster_h

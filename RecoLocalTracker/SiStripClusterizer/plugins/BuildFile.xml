@@ -2,9 +2,13 @@
   <use name="EventFilter/SiStripRawToDigi"/>
   <use name="RecoLocalTracker/SiStripClusterizer"/>
   <use name="RecoLocalTracker/SiStripZeroSuppression"/>
+  <use name="RecoTracker/PixelLowPtUtilities"/>
   <use name="HeterogeneousCore/CUDACore"/>
   <use name="HeterogeneousCore/CUDAUtilities"/>
   <use name="CUDADataFormats/SiStripCluster"/>
   <use name="cuda"/>
+  <use name="CalibFormats/SiStripObjects"/>
+  <use name="CalibTracker/SiStripCommon"/>
   <flags EDM_PLUGIN="1"/>
+  <flags CXXFLAGS="-g"/>
 </library>
