@@ -117,16 +117,17 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
     float mip = 3.9 / (MeVperADCStrip / stripDet->surface().bounds().thickness());
 
     for (const auto& cluster : detClusters){
-      const LocalPoint& lp = det->surface().toLocal(GlobalPoint(cluster.barycenter(),barycenter_ypos,stripDet->surface().position().z()));
+      const LocalPoint& lp = LocalPoint(cluster.barycenter(),barycenter_ypos,0.);
+      std::cout << "Approx " << detId  << " " << lp << std::endl;
       const GlobalPoint& gpos = det->surface().toGlobal(lp);
       GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
-      const GlobalVector& gdir = beamspot - gpos;
+      const GlobalVector& gdir = gpos - beamspot;
       const LocalVector& ldir = det->toLocal(gdir);
-      const LocalPoint& lpos = det->toLocal(gpos);
+      //const LocalPoint& lpos = det->toLocal(gpos);
 
       int hitStrips;
       float hitPredPos;
-      bool usable = theFilter->getSizes(detId, cluster, lpos, ldir, hitStrips, hitPredPos);
+      bool usable = theFilter->getSizes(detId, cluster, lp, ldir, hitStrips, hitPredPos);
 
       bool peakFilter = false;
       SlidingPeakFinder pf(std::max<int>(2, std::ceil(std::abs(hitPredPos) + subclusterWindow_))); 
