@@ -7,8 +7,9 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
   barycenter_ = std::round(cluster.barycenter() * 10);
   width_ = cluster.size();
   avgCharge_ = cluster.charge() / cluster.size();
+  filter_ = false;
   isSaturated_ = false;
-  trimFilter_ = false;
+  //trimFilter_ = false;
   peakFilter_ = peakFilter;
 
   //mimicing the algorithm used in StripSubClusterShapeTrajectoryFilter...
@@ -27,6 +28,7 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
     maxSat = std::max<int>(maxSat, thisSat);
   }
   if (maxSat >= maxNSat) {
+    filter_ = true;
     isSaturated_ = true;
   }
 
@@ -51,9 +53,18 @@ SiStripApproximateCluster::SiStripApproximateCluster(const SiStripCluster& clust
     --last;
   }
   if (hitStripsTrim < std::floor(std::abs(hitPredPos) - maxTrimmedSizeDiffNeg_)) {
-    trimFilter_ =  false;
+    filter_ = false;
+    //trimFilter_ =  false;
   } else if (hitStripsTrim <= std::ceil(std::abs(hitPredPos) + maxTrimmedSizeDiffPos_)) {
-    trimFilter_ = true;
+    filter_ = true;
+    //trimFilter_ = true;
+  } else {
+    if (peakFilter_){
+       filter_ = true;
+    } else {
+       filter_ = false;
+    }
+    
   }
 
 }
