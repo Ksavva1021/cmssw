@@ -27,7 +27,7 @@ namespace edm {
   class ConsumesCollector;
 }  // namespace edm
 
-//#define StripSubClusterShapeFilterBase_COUNTERS
+#define StripSubClusterShapeFilterBase_COUNTERS
 
 class StripSubClusterShapeFilterBase {
 public:
