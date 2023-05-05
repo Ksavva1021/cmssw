@@ -108,7 +108,9 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
 
     unsigned int detId = detClusters.id();
     const GeomDet* det = tkGeom->idToDet(detId);
+    double nApvs;
     double stripLength; 
+    nApvs = detInfo.getNumberOfApvsAndStripLength(detId).first;
     stripLength = detInfo.getNumberOfApvsAndStripLength(detId).second;
     double barycenter_ypos;
     barycenter_ypos  = 0.5 * stripLength;
@@ -117,8 +119,7 @@ void SiStripClusters2ApproxClusters::produce(edm::Event& event, edm::EventSetup 
     float mip = 3.9 / (MeVperADCStrip / stripDet->surface().bounds().thickness());
 
     for (const auto& cluster : detClusters){
-      const LocalPoint& lp = LocalPoint(cluster.barycenter(),barycenter_ypos,0.);
-      std::cout << "Approx " << detId  << " " << lp << std::endl;
+      const LocalPoint& lp = LocalPoint(((cluster.barycenter()*10/(128*nApvs))-((stripDet->surface().bounds().width())*0.5f)),barycenter_ypos-(0.5f*stripLength),0.);
       const GlobalPoint& gpos = det->surface().toGlobal(lp);
       GlobalPoint beamspot(bs->position().x(), bs->position().y(), bs->position().z());
       const GlobalVector& gdir = gpos - beamspot;
