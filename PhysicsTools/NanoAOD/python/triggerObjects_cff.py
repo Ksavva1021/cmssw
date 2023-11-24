@@ -299,6 +299,39 @@ run2_HLTconditions_2016.toModify(
     )
 )
 
+_run2_2017_tau_filters = [
+        mksel("filter('*LooseChargedIso*')","LooseChargedIso"),
+        mksel("filter('*MediumChargedIso*')","MediumChargedIso"),
+        mksel("filter('*TightChargedIso*')","TightChargedIso"),
+        mksel("filter('*DeepTau*')","DeepTau"),
+        mksel("filter('*TightOOSCPhotons*')","TightID OOSC photons"),
+        mksel("filter('*Hps*')","HPS"),
+        mksel("filter('hlt*DoublePFTau*TrackPt1*ChargedIsolation*Dz02*')","charged iso di-tau"),
+        mksel("filter('hlt*DoublePFTau*DeepTau*L1HLTMatched')","deeptau di-tau"),
+        mksel("filter('hlt*OverlapFilterIsoEle*WPTightGsf*PFTau*')","e-tau"),
+        mksel("filter('hlt*OverlapFilterIsoMu*PFTau*')","mu-tau"),
+        mksel("filter('hlt*SelectedPFTau*L1HLTMatched')","single-tau/tau+MET"),
+        mksel("filter('hlt*DoublePFTau*TrackPt1*ChargedIso*')","run 2 VBF+ditau"),
+        mksel("filter('hlt*DoublePFTau*Track*ChargedIso*AgainstMuon')","run 3 VBF+ditau"),
+        mksel("filter('hltHpsSinglePFTau*HLTMatched')","run 3 double PF jets + ditau"),
+        mksel("filter('hltHpsOverlapFilterDeepTauDoublePFTau*PFJet*')","di-tau + PFJet"),
+        mksel("filter('hlt*Double*ChargedIsoDisplPFTau*Dxy*')","Displaced Tau"),
+        mksel("filter('*Monitoring')","Monitoring"),
+        mksel("filter('*Reg')","regional paths"),
+        mksel("filter('*L1Seeded')","L1 seeded paths"),
+        mksel("filter('*1Prong')","1 prong tau paths")
+]
+run2_HLTconditions_2017.toModify(
+    triggerObjectTable.selections.Tau,
+    sel = "type(84) && pt > 5 && coll('*Tau*') && ( filter('*LooseChargedIso*') || filter('*MediumChargedIso*') || filter('*DeepTau*') || filter('*TightChargedIso*') || filter('*TightOOSCPhotons*') || filter('hltL2TauIsoFilter') || filter('*OverlapFilterIsoMu*') || filter('*OverlapFilterIsoEle*') || filter('*L1HLTMatched*') || filter('*Dz02*') || filter('*DoublePFTau*') || filter('*SinglePFTau*') || filter('hlt*SelectedPFTau') || filter('*DisplPFTau*') )", 
+    qualityBits = cms.VPSet(_run2_2017_tau_filters)
+)
+run2_HLTconditions_2018.toModify(
+    triggerObjectTable.selections.Tau,
+    sel = "type(84) && pt > 5 && coll('*Tau*') && ( filter('*LooseChargedIso*') || filter('*MediumChargedIso*') || filter('*DeepTau*') || filter('*TightChargedIso*') || filter('*TightOOSCPhotons*') || filter('hltL2TauIsoFilter') || filter('*OverlapFilterIsoMu*') || filter('*OverlapFilterIsoEle*') || filter('*L1HLTMatched*') || filter('*Dz02*') || filter('*DoublePFTau*') || filter('*SinglePFTau*') || filter('hlt*SelectedPFTau') || filter('*DisplPFTau*') )",
+    qualityBits = cms.VPSet(_run2_2017_tau_filters)
+)
+
 _run2_HLTconditions = run2_HLTconditions_2016 | run2_HLTconditions_2017 | run2_HLTconditions_2018
 
 _run2_2016_jet_filters = [
