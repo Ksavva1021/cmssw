@@ -135,16 +135,30 @@ def nanoAOD_addBoostedTauIds(process, idsToRun=[]):
 
     return process
 
-def nanoAOD_addPNetToTaus(process, addPNetInfo=False, runPNetCHSAK4=False):
-    if addPNetInfo:
+def nanoAOD_addUTagToTaus(process, addUTagInfo=False, runUTagAK4=False,
+                          usePUPPIjets=False):
+    if addUTagInfo:
         originalTauName = process.finalTaus.src.value()
-        updatedTauName = originalTauName+'WithPNet'
-        jetCollection = "updatedJets"
-        process.load('RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff')
-        pnetTagName = "pfParticleNetFromMiniAODAK4CHSCentralJetTag"
-        pnetDiscriminators = [];
-        for tag in getattr(process,pnetTagName+"s").flav_names.value():
-            pnetDiscriminators.append(pnetTagName+"s:"+tag)
+        
+        if usePUPPIjets: # option to use PUPPI jets
+            jetCollection = "updatedJetsPuppi"
+            TagName = "pfParticleNetFromMiniAODAK4PuppiCentralJetTag"
+            tag_prefix = "byUTagPUPPI"
+            updatedTauName = originalTauName+'WithUTagPUPPI'
+            # TODO: Below is for PNet - add UParT when available
+            process.load('RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff')
+        else: # use CHS jets by default
+            jetCollection = "updatedJets"
+            TagName = "pfParticleNetFromMiniAODAK4CHSCentralJetTag"
+            tag_prefix = "byUTagCHS"
+            updatedTauName = originalTauName+'WithUTagCHS'
+            # PNet tagger used for CHS jets
+            process.load('RecoBTag.ONNXRuntime.pfParticleNetFromMiniAODAK4_cff')
+              
+        Discriminators = [];
+        for tag in getattr(process,TagName+"s").flav_names.value():
+            Discriminators.append(TagName+"s:"+tag)
+        print(Discriminators)
 
         # Define "hybridTau" producer
         from PhysicsTools.PatAlgos.patTauHybridProducer_cfi import patTauHybridProducer
@@ -154,8 +168,9 @@ def nanoAOD_addPNetToTaus(process, addPNetInfo=False, runPNetCHSAK4=False):
             dRMax = 0.4,
             jetPtMin = 15,
             jetEtaMax = 2.5,
-            pnetLabel = pnetTagName+"s",
-            pnetScoreNames = pnetDiscriminators,
+            UTagLabel = TagName+"s",
+            UTagScoreNames = Discriminators,
+            tagPrefix = tag_prefix,
             tauScoreMin = -1,
             vsJetMin = 0.05,
             checkTauScoreIsBest = False,
@@ -165,13 +180,19 @@ def nanoAOD_addPNetToTaus(process, addPNetInfo=False, runPNetCHSAK4=False):
         ))
         process.finalTaus.src = updatedTauName
 
-        # run PNet for CHS AK4 jets if requested
-        if runPNetCHSAK4:
+        if runUTagAK4 and not usePUPPIjets:
             from PhysicsTools.NanoAOD.jetsAK4_CHS_cff import nanoAOD_addDeepInfoAK4CHS
             process = nanoAOD_addDeepInfoAK4CHS(process,
                                                 addDeepBTag = False,
                                                 addDeepFlavour = False,
                                                 addParticleNet = True
+            )
+        elif runUTagAK4 and usePUPPIjets: 
+            # TODO: Below is for PNet - add UParT when available
+            from PhysicsTools.NanoAOD.jetsAK4_Puppi_cff import nanoAOD_addDeepInfoAK4
+            process = nanoAOD_addDeepInfoAK4(process,
+                                             addParticleNet = True,
+                                             addRobustParTAK4=False
             )
 
         #remember to adjust the selection and tables with added IDs
@@ -233,7 +254,8 @@ def nanoAOD_customizeCommon(process):
 
     nanoAOD_tau_switch = cms.PSet(
         idsToAdd = cms.vstring(),
-        runPNetAK4 = cms.bool(False),
+        runUTagCHSAK4 = cms.bool(False),
+        runUTagPUPPIAK4 = cms.bool(False),
         addPNet = cms.bool(True)
     )
     (run2_nanoAOD_106Xv2 | run3_nanoAOD_122).toModify(
@@ -246,12 +268,26 @@ def nanoAOD_customizeCommon(process):
     # (it is rerun for run2 within jet tasks while is not needed for newer
     # run3 eras as it is present in miniAOD)
     (run3_nanoAOD_122 | run3_nanoAOD_124).toModify(
-        nanoAOD_tau_switch, runPNetAK4 = True
+        nanoAOD_tau_switch, runUTagCHSAK4 = True
     )
-    nanoAOD_addPNetToTaus(process,
-                          addPNetInfo = nanoAOD_tau_switch.addPNet.value(),
-                          runPNetCHSAK4 = nanoAOD_tau_switch.runPNetAK4.value()
+    # enable rerun of tagger for PUPPI jets for early run 3
+    (run3_nanoAOD_122 | run3_nanoAOD_124).toModify(
+        nanoAOD_tau_switch, runUTagPUPPIAK4 = True
     )
+    
+    # Add Unified Tagger For CHS Jets (PNet 2023)
+    nanoAOD_addUTagToTaus(process,
+                          addUTagInfo = nanoAOD_tau_switch.addPNet.value(),
+                          runUTagAK4 = nanoAOD_tau_switch.runUTagCHSAK4.value(),
+                          usePUPPIjets = False
+    )
+    # Add Unified Tagger For PUPPI Jets (TODO: Replace PNet 23 by UParT when available)
+    nanoAOD_addUTagToTaus(process,
+                          addUTagInfo = nanoAOD_tau_switch.addPNet.value(),
+                          runUTagAK4 = nanoAOD_tau_switch.runUTagPUPPIAK4.value(),
+                          usePUPPIjets = True
+    )
+    
     nanoAOD_boostedTau_switch = cms.PSet(
         idsToAdd = cms.vstring()
     )
